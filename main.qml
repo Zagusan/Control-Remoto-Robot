@@ -31,7 +31,7 @@ Page  {
             search.text = "Buscar Dispositivos"
         }
         function onSearchStopped(){
-            search.enabled = true
+            //search.enabled = true
             searchIndicator.running = false
         }
     }
@@ -59,7 +59,7 @@ Page  {
                 Rectangle {
                     id: bluetooth
                     width: 450
-                    height: 300
+                    height: 350
                     color: "#ffffff"
                     radius: 8
                     border.width: 0
@@ -100,6 +100,21 @@ Page  {
                             }
 
                             Button {
+                                id: toControls
+                                width: 150
+                                height: 80
+                                text: qsTr("Controlar Robot")
+                                enabled: true
+                                font.hintingPreference: Font.PreferDefaultHinting
+                                Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
+                                Layout.fillHeight: true
+                                Layout.fillWidth: true
+                                font.pointSize: 16
+                                checkable: false
+                                highlighted: false
+                            }
+
+                            Button {
                                 id: search
                                 width: 150
                                 height: 80
@@ -131,26 +146,44 @@ Page  {
                     }
                 }
 
-                PaddedRectangle {
+                Rectangle {
                     id: devices
                     width: 200
                     height: 200
                     color: "#ffffff"
                     Layout.fillHeight: true
                     Layout.fillWidth: true
-                    leftPadding: 20
-                    rightPadding: 20
-                    topPadding: 20
-                    bottomPadding: 20
 
-                    ScrollView {
-                        id: devicesScroll
+                    Frame {
                         anchors.fill: parent
-                        clip: true
+                        leftPadding: 20
+                        rightPadding: 20
+                        topPadding: 20
+                        bottomPadding: 20
 
-                        ColumnLayout {
-                            id: devicesColumnLayout
+                        ScrollView {
+                            id: devicesScroll
                             anchors.fill: parent
+                            clip: true
+
+                            ColumnLayout {
+                                id: devicesColumnLayout
+                                anchors.fill: parent
+                                property var buttons: []
+                                property var buttonComponent: Qt.createComponent("peripheralButton.qml")
+
+                                Connections {
+                                    target: backend
+
+                                    function onNewPeripheralButton(name){
+                                        print("Creating new button for " + name)
+                                        var button = devicesColumnLayout.buttonComponent.createObject(devicesColumnLayout)
+                                        button.text = qsTr(name)
+
+                                        devicesColumnLayout.buttons.push(button)
+                                    }
+                                }
+                            }
                         }
                     }
                 }
