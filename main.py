@@ -5,10 +5,13 @@ from PySide6.QtGui import QGuiApplication
 from PySide6.QtQuick import QQuickView
 from PySide6.QtCore import QObject, Slot, Signal
 
+# Permite ejecutar código en otro hilo
 executor = ThreadPoolExecutor()
 
+# Clase para modificar la interfaz de usuario
 class Frontend(QObject):
 
+    # Adaptador de Bluetooth
     adapter = None
 
     enableSearchButton = Signal()
@@ -28,14 +31,15 @@ class Frontend(QObject):
     def change_bluetooth(self):
         self.changeBluetooth.emit(simpleble.Adapter.bluetooth_enabled())
 
-    def scan_async(self):
+    def scan(self):
         self.adapter.scan_start()
         self.adapter.scan_for(5000)
 
     @Slot()
     def bt_start_search(self):
         print("Beginning scan")
-        executor.submit(self.scan_async)
+        # Hace el escaneo en otro hilo
+        executor.submit(self.scan)
 
 
 
@@ -44,9 +48,11 @@ class Frontend(QObject):
         print("Scan stopped")
         self.searchStopped.emit()
 
+        # Obtiene los dispositivos que se encontraron
         peripherals = self.adapter.scan_get_results()
         print(len(peripherals))
         for peripheral in peripherals:
+            # Solo muestra los dispositivos con servicios BLE expuestos
             if len(peripheral.services()) > 0:
                 name = peripheral.identifier() + " " + peripheral.address()
                 self.newPeripheralButton.emit(name)
@@ -60,7 +66,9 @@ if __name__ == "__main__":
     view = QQuickView()
     frontend = Frontend()
 
+    # Expone las funciones del objeto frontend a la interfaz
     view.rootContext().setContextProperty("backend", frontend)
+    # Carga la interfaz
     view.setSource("main.qml")
     view.setResizeMode(QQuickView.SizeRootObjectToView)
 
@@ -75,6 +83,7 @@ if __name__ == "__main__":
     except IndexError:
         print("No Bluetooth adapters found")
 
+    # Comprueba si el Bluetooth está activado
     frontend.change_bluetooth()
 
     view.show()

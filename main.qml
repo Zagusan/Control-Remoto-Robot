@@ -19,8 +19,10 @@ Page  {
     height: 1280
 
     Connections {
+        // Se conecta a los eventos de Python
         target: backend
 
+        // Crea funciones para los eventos definidos en Python
         function onChangeBluetooth(enabled){
             print("Changing bluetooth now")
             bluetoothEnabled.checked = enabled
@@ -36,6 +38,7 @@ Page  {
         }
     }
 
+    // Permite cambiar de página en la interfaz
     StackLayout {
         id: stackLayout
         anchors.fill: parent
@@ -112,6 +115,10 @@ Page  {
                                 font.pointSize: 16
                                 checkable: false
                                 highlighted: false
+                                // Cambia a los controles al hacer click en el botón
+                                onClicked: {
+                                    stackLayout.currentIndex = 1
+                                }
                             }
 
                             Button {
@@ -128,6 +135,8 @@ Page  {
                                 checkable: false
                                 highlighted: false
                                 flat: false
+                                // Cuando se hace click en el botón este se desactiva,
+                                // activa el indicador de carga y comienza la búsqueda de Bluetooth
                                 onClicked: {
                                     enabled = false
                                     searchIndicator.running = true
@@ -169,12 +178,17 @@ Page  {
                             ColumnLayout {
                                 id: devicesColumnLayout
                                 anchors.fill: parent
+                                // Aquí se almacenan los botones creados
                                 property var buttons: []
+                                // Esto carga un archivo con la configuración de los botones
+                                // para los dispositivos encontrados
                                 property var buttonComponent: Qt.createComponent("peripheralButton.qml")
 
                                 Connections {
+                                    // Se conecta a los eventos de Python
                                     target: backend
 
+                                    // Crea un botón y lo añade a la lista "buttons"
                                     function onNewPeripheralButton(name){
                                         print("Creating new button for " + name)
                                         var button = devicesColumnLayout.buttonComponent.createObject(devicesColumnLayout)
@@ -194,25 +208,37 @@ Page  {
             id: control
             width: 200
             height: 200
-            color: "#ffffff"
+            color: "#000000"
             radius: 8
             border.width: 0
             Layout.fillWidth: true
             Layout.fillHeight: true
             Layout.alignment: Qt.AlignHCenter | Qt.AlignTop
 
+            // Sirve para poder arrastrar un objeto (en este caso, joystick)
             MouseArea {
                 id: mouseArea
                 anchors.fill: parent
                 drag.target: joystick
                 preventStealing: false
                 cursorShape: Qt.OpenHandCursor
+                // Permitir que joystick se mueva cuando se hace click
+                onPressed: {
+                    joystick.anchors.verticalCenter = undefined
+                    joystick.anchors.horizontalCenter = undefined
+                }
+                // Devolver al joystick al centro
+                onReleased: {
+                    joystick.anchors.verticalCenter = mouseArea.verticalCenter
+                    joystick.anchors.horizontalCenter = mouseArea.horizontalCenter
+                }
 
                 Rectangle {
                     id: joystick
                     width: 200
                     height: 200
                     color: "#cbcbcb"
+                    // Convierte al rectángulo en un círculo
                     radius: 100
                     anchors.verticalCenter: parent.verticalCenter
                     anchors.horizontalCenter: parent.horizontalCenter
