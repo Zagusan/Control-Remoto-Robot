@@ -209,7 +209,6 @@ Page  {
             width: 200
             height: 200
             color: "#000000"
-            radius: 8
             border.width: 0
             Layout.fillWidth: true
             Layout.fillHeight: true
