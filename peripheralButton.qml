@@ -10,6 +10,7 @@ Button {
     width: 150
     height: 80
     text: qsTr("Dispositivo")
+    font.pointSize: 16
     onClicked: {
         backend.select_device()
     }
