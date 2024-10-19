@@ -1,7 +1,8 @@
 {
     "files": [
         "main.py",
-        "main.qml",
+        "main.ui.qml",
+        "mouseArea.qml",
         "peripheralButton.qml"
     ]
 }
