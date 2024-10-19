@@ -5,44 +5,23 @@
     It is supposed to be strictly declarative and only uses a subset of QML. If you edit
     this file manually, you might introduce QML code that is not supported by Qt Design Studio.
     Check out https://doc.qt.io/qtcreator/creator-quick-ui-forms.html for details on .ui.qml files.
-    */
+*/
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 
-
-
-Page  {
+Page {
     id: window
     visible: true
     width: 720
     height: 1280
 
-    Connections {
-        // Se conecta a los eventos de Python
-        target: backend
-
-        // Crea funciones para los eventos definidos en Python
-        function onChangeBluetooth(enabled){
-            print("Changing bluetooth now")
-            bluetoothEnabled.checked = enabled
-        }
-        function onEnableSearchButton(){
-            print("Enabling search button")
-            search.enabled = true
-            search.text = "Buscar Dispositivos"
-        }
-        function onSearchStopped(){
-            //search.enabled = true
-            searchIndicator.running = false
-        }
-    }
-
     // Permite cambiar de página en la interfaz
     StackLayout {
         id: stackLayout
+        objectName: "stackLayout"
         anchors.fill: parent
-        currentIndex: 0
+        currentIndex: 1
 
         Frame {
             id: config
@@ -88,7 +67,8 @@ Page  {
                             uniformCellSizes: true
 
                             CheckBox {
-                                id: bluetoothEnabled
+                                id: bluetoothAvailable
+                                objectName: "bluetoothAvailable"
                                 width: 150
                                 height: 80
                                 text: qsTr("Bluetooth")
@@ -104,6 +84,7 @@ Page  {
 
                             Button {
                                 id: toControls
+                                objectName: "controls"
                                 width: 150
                                 height: 80
                                 text: qsTr("Controlar Robot")
@@ -115,17 +96,14 @@ Page  {
                                 font.pointSize: 16
                                 checkable: false
                                 highlighted: false
-                                // Cambia a los controles al hacer click en el botón
-                                onClicked: {
-                                    stackLayout.currentIndex = 1
-                                }
                             }
 
                             Button {
                                 id: search
+                                objectName: "search"
                                 width: 150
                                 height: 80
-                                text: qsTr("Adaptador de Bluetooth no Disponible")
+                                text: qsTr("Adaptador de Bluetooth no disponible")
                                 enabled: false
                                 font.hintingPreference: Font.PreferDefaultHinting
                                 Layout.alignment: Qt.AlignHCenter | Qt.AlignVCenter
@@ -135,17 +113,11 @@ Page  {
                                 checkable: false
                                 highlighted: false
                                 flat: false
-                                // Cuando se hace click en el botón este se desactiva,
-                                // activa el indicador de carga y comienza la búsqueda de Bluetooth
-                                onClicked: {
-                                    enabled = false
-                                    searchIndicator.running = true
-                                    backend.bt_start_search()
-                                }
                             }
 
                             BusyIndicator {
                                 id: searchIndicator
+                                objectName: "searchIndicator"
                                 running: false
                                 Layout.fillHeight: true
                                 Layout.fillWidth: true
@@ -177,26 +149,8 @@ Page  {
 
                             ColumnLayout {
                                 id: devicesColumnLayout
+                                objectName: "devices"
                                 anchors.fill: parent
-                                // Aquí se almacenan los botones creados
-                                property var buttons: []
-                                // Esto carga un archivo con la configuración de los botones
-                                // para los dispositivos encontrados
-                                property var buttonComponent: Qt.createComponent("peripheralButton.qml")
-
-                                Connections {
-                                    // Se conecta a los eventos de Python
-                                    target: backend
-
-                                    // Crea un botón y lo añade a la lista "buttons"
-                                    function onNewPeripheralButton(name){
-                                        print("Creating new button for " + name)
-                                        var button = devicesColumnLayout.buttonComponent.createObject(devicesColumnLayout)
-                                        button.text = qsTr(name)
-
-                                        devicesColumnLayout.buttons.push(button)
-                                    }
-                                }
                             }
                         }
                     }
@@ -206,6 +160,7 @@ Page  {
 
         Rectangle {
             id: control
+            objectName: "controlBG"
             width: 200
             height: 200
             color: "#000000"
@@ -214,34 +169,52 @@ Page  {
             Layout.fillHeight: true
             Layout.alignment: Qt.AlignHCenter | Qt.AlignTop
 
-            // Sirve para poder arrastrar un objeto (en este caso, joystick)
-            MouseArea {
-                id: mouseArea
-                anchors.fill: parent
-                drag.target: joystick
-                preventStealing: false
-                cursorShape: Qt.OpenHandCursor
-                // Permitir que joystick se mueva cuando se hace click
-                onPressed: {
-                    joystick.anchors.verticalCenter = undefined
-                    joystick.anchors.horizontalCenter = undefined
-                }
-                // Devolver al joystick al centro
-                onReleased: {
-                    joystick.anchors.verticalCenter = mouseArea.verticalCenter
-                    joystick.anchors.horizontalCenter = mouseArea.horizontalCenter
-                }
+            Button {
+                id: back
+                objectName: "back"
+                x: 10
+                y: 10
+                width: 150
+                height: 50
+                visible: true
+                text: qsTr("← Volver")
+                anchors.left: parent.left
+                anchors.top: parent.top
+                anchors.leftMargin: 10
+                anchors.topMargin: 10
+                z: 10
+                font.pointSize: 16
+                layer.enabled: false
+            }
+            Rectangle {
+                id: joystick
+                objectName: "joystick"
+                width: 200
+                height: 200
+                color: "#cbcbcb"
+                // Convierte al rectángulo en un círculo
+                radius: 100
+                border.color: "#cbcbcb"
+                anchors.verticalCenter: parent.verticalCenter
+                z: 2
+                anchors.horizontalCenter: parent.horizontalCenter
+            }
 
-                Rectangle {
-                    id: joystick
-                    width: 200
-                    height: 200
-                    color: "#cbcbcb"
-                    // Convierte al rectángulo en un círculo
-                    radius: 100
-                    anchors.verticalCenter: parent.verticalCenter
-                    anchors.horizontalCenter: parent.horizontalCenter
-                }
+            Rectangle {
+                id: center
+                x: 260
+                y: 540
+                width: 220
+                height: 220
+                opacity: 1
+                color: "#000000"
+                radius: 110
+                border.color: "#666666"
+                border.width: 4
+                anchors.verticalCenter: parent.verticalCenter
+                z: 1
+                objectName: "joystick"
+                anchors.horizontalCenter: parent.horizontalCenter
             }
         }
     }
